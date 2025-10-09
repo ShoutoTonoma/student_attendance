@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Учет посещаемости</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 15px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: clamp(16px, 5vw, 28px);
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+
+        .date-info {
+            font-size: clamp(11px, 3vw, 14px);
+            opacity: 0.95;
+        }
+
+        .content {
+            padding: 15px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 10px 5px;
+        }
+
+        .stat-number {
+            font-size: clamp(24px, 6vw, 32px);
+            font-weight: bold;
+            color: #667eea;
+            line-height: 1.2;
+        }
+
+        .stat-label {
+            font-size: clamp(11px, 2.5vw, 14px);
+            color: #666;
+            margin-top: 5px;
+            word-wrap: break-word;
+        }
+
+        .student-item {
+            display: grid;
+            grid-template-columns: auto auto 1fr;
+            grid-template-areas: 
+                "number checkbox name"
+                "reason reason reason";
+            align-items: center;
+            gap: 10px;
+            padding: 12px 8px;
+            border-bottom: 1px solid #e0e0e0;
+            transition: background 0.2s;
+        }
+
+        .student-item:hover {
+            background: #f5f5f5;
+        }
+
+        .student-item:last-child {
+            border-bottom: none;
+        }
+
+        .student-number {
+            grid-area: number;
+            font-weight: bold;
+            color: #667eea;
+            font-size: clamp(14px, 3.5vw, 18px);
+            min-width: 25px;
+        }
+
+        .checkbox-wrapper {
+            grid-area: checkbox;
+            display: flex;
+            align-items: center;
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            width: clamp(20px, 5vw, 24px);
+            height: clamp(20px, 5vw, 24px);
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .student-name {
+            grid-area: name;
+            font-size: clamp(13px, 3.5vw, 16px);
+            color: #333;
+            line-height: 1.4;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .student-name label {
+            cursor: pointer;
+            display: block;
+        }
+
+        .reason-input {
+            grid-area: reason;
+            width: 100%;
+            max-width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: clamp(12px, 3vw, 14px);
+            transition: all 0.3s;
+            margin-top: 5px;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+
+        .reason-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .reason-input:disabled {
+            background: #f5f5f5;
+            cursor: not-allowed;
+            display: none;
+        }
+        
+        .reason-input:not(:disabled) {
+            display: block;
+        }
+
+        .export-btn {
+            margin-top: 20px;
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: clamp(14px, 4vw, 18px);
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            touch-action: manipulation;
+        }
+
+        .export-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Для десктопа */
+        @media (min-width: 769px) {
+            body {
+                padding: 20px;
+            }
+
+            .content {
+                padding: 30px;
+            }
+
+            .header {
+                padding: 30px;
+            }
+
+            .stats {
+                padding: 20px;
+                margin-bottom: 30px;
+            }
+
+            .student-item {
+                grid-template-columns: 40px auto 1fr 300px;
+                grid-template-areas: "number checkbox name reason";
+                padding: 15px;
+            }
+
+            .reason-input {
+                margin-top: 0;
+            }
+
+            .reason-input:disabled {
+                display: block;
+            }
+
+            .export-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+            }
+
+            .export-btn:active {
+                transform: translateY(0);
+            }
+        }
+
+        /* Для планшетов */
+        @media (min-width: 481px) and (max-width: 768px) {
+            .content {
+                padding: 20px;
+            }
+
+            .student-item {
+                grid-template-columns: 35px auto 1fr;
+                padding: 12px 10px;
+            }
+
+            .stats {
+                gap: 15px;
+            }
+        }
+
+        /* Для очень маленьких экранов */
+        @media (max-width: 360px) {
+            body {
+                padding: 5px;
+            }
+
+            .content {
+                padding: 10px;
+            }
+
+            .stats {
+                padding: 10px;
+                gap: 8px;
+            }
+
+            .stat-item {
+                padding: 8px 3px;
+            }
+
+            .student-item {
+                padding: 10px 5px;
+                gap: 8px;
+            }
+
+            .student-number {
+                min-width: 20px;
+            }
+        }
+
+        /* Оптимизация для касаний */
+        @media (hover: none) and (pointer: coarse) {
+            .student-item {
+                padding: 15px 10px;
+            }
+
+            .checkbox-wrapper input[type="checkbox"] {
+                min-width: 24px;
+                min-height: 24px;
+            }
+
+            .export-btn {
+                padding: 16px;
+                min-height: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 Учет посещаемости студентов</h1>
+            <div class="date-info" id="currentDate"></div>
+        </div>
+
+        <div class="content">
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-number" id="presentCount">0</div>
+                    <div class="stat-label">Присутствуют</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="absentCount">0</div>
+                    <div class="stat-label">Отсутствуют</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="totalCount">0</div>
+                    <div class="stat-label">Всего</div>
+                </div>
+            </div>
+
+            <div id="studentList"></div>
+
+            <button class="export-btn" onclick="exportToExcel()">
+                📥 Экспортировать в Excel
+            </button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        const students = [
+            "Айтқали Дәулетхан Сүлейменұлы",
+            "Алдабергенов Жан",
+            "Алтынбаева Дана Алтынбекқызы",
+            "Алтынова Қаракөз Жеңісқызы",
+            "Амангосов Али Болатович",
+            "Айтембетов Даулет Куанышкалиулы",
+            "Әмитжанова Ақмерей Талғатқызы",
+            "Багдатов Азат Торебаевич",
+            "Бақыт Тілек Арманұлы",
+            "Бектібай Диас",
+            "Бисембаев Мирас Беркинович",
+            "Бірлік Нұрасыл Мәдиұлы",
+            "Джапаров Ануар Канатович",
+            "Жангазин Ержан Муратулы",
+            "Жангелді Дәулет Нұрлыбекұлы",
+            "Жаңабай Арнат Қанатұлы",
+            "Изматова Айман Нурбаевна",
+            "Қалбек Айбар Бүркітұлы",
+            "Қартанбаев Бақдаулет Ақалмасұлы",
+            "Нажимова Назерке Сұлтанбекқызы",
+            "Сағынтаев Нұртілеу Айболатұлы",
+            "Серік Олжас Мақсатұлы",
+            "Тұрғанбаева Наргиз Нүркенқызы",
+            "Шутанов Аян Серикович"
+        ];
+
+        const dateOptions = { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        };
+        document.getElementById('currentDate').textContent = 
+            new Date().toLocaleDateString('ru-RU', dateOptions);
+
+        const studentList = document.getElementById('studentList');
+        students.forEach((name, index) => {
+            const item = document.createElement('div');
+            item.className = 'student-item';
+            item.innerHTML = `
+                <div class="student-number">${index + 1}.</div>
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="student-${index}" checked onchange="toggleReason(${index})">
+                </div>
+                <div class="student-name">
+                    <label for="student-${index}">${name}</label>
+                </div>
+                <input type="text" class="reason-input" id="reason-${index}" 
+                       placeholder="Причина отсутствия" disabled>
+            `;
+            studentList.appendChild(item);
+        });
+
+        function updateStats() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            let presentCount = 0;
+            checkboxes.forEach(cb => {
+                if (cb.checked) presentCount++;
+            });
+            
+            document.getElementById('presentCount').textContent = presentCount;
+            document.getElementById('absentCount').textContent = students.length - presentCount;
+            document.getElementById('totalCount').textContent = students.length;
+        }
+
+        function toggleReason(index) {
+            const checkbox = document.getElementById(`student-${index}`);
+            const reasonInput = document.getElementById(`reason-${index}`);
+            
+            if (checkbox.checked) {
+                reasonInput.disabled = true;
+                reasonInput.value = '';
+            } else {
+                reasonInput.disabled = false;
+                setTimeout(() => reasonInput.focus(), 100);
+            }
+            
+            updateStats();
+        }
+
+        function exportToExcel() {
+            const data = [];
+            const date = new Date().toLocaleDateString('ru-RU');
+            
+            data.push(['Студент', date, 'Причина отсутствия']);
+            
+            let presentCount = 0;
+            let absentCount = 0;
+            
+            students.forEach((name, index) => {
+                const checkbox = document.getElementById(`student-${index}`);
+                const reason = document.getElementById(`reason-${index}`).value;
+                
+                if (checkbox.checked) {
+                    presentCount++;
+                } else {
+                    absentCount++;
+                }
+                
+                data.push([
+                    name,
+                    checkbox.checked ? 'Присутствует' : 'Отсутствует',
+                    reason
+                ]);
+            });
+            
+            data.push(['', '', '']);
+            data.push(['Всего студентов в группе:', students.length, '']);
+            data.push(['Присутствуют:', presentCount, '']);
+            data.push(['Отсутствуют:', absentCount, '']);
+            
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            
+            ws['!cols'] = [
+                { wch: 40 },
+                { wch: 15 },
+                { wch: 35 }
+            ];
+            
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            for (let R = range.s.r; R <= range.e.r; ++R) {
+                for (let C = range.s.c; C <= range.e.c; ++C) {
+                    const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+                    if (!ws[cellAddress]) ws[cellAddress] = { t: 's', v: '' };
+                    
+                    ws[cellAddress].s = {
+                        border: {
+                            top: { style: 'thin', color: { rgb: '000000' } },
+                            bottom: { style: 'thin', color: { rgb: '000000' } },
+                            left: { style: 'thin', color: { rgb: '000000' } },
+                            right: { style: 'thin', color: { rgb: '000000' } }
+                        }
+                    };
+                }
+            }
+            
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Посещаемость');
+            
+            const fileName = `Посещаемость_${date.replace(/\./g, '-')}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+        }
+
+        updateStats();
+    </script>
+</body>
+</html>
